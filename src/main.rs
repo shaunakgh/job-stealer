@@ -2,7 +2,9 @@ use colored::*;
 use std::error::Error;
 use std::process::Command;
 
-fn main() -> Result<(), Box<dyn Error>> {
+type ModelPromptLang = (String, String, String);
+
+fn get_args() -> Result<ModelPromptLang, Box<dyn Error>> {
     let model = loop {
         let mut line = String::new();
         println!("{} Enter the model to be used: ", "?".blue());
@@ -22,22 +24,6 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
             Err(_) => {
                 eprintln!("{}", "Invalid model — please try again.".red());
-            }
-        }
-    };
-    let prompt = loop {
-        let mut line = String::new();
-        println!("{} Enter the prompt: ", "?".blue());
-        std::io::stdin()
-            .read_line(&mut line)
-            .expect("Failed to read line");
-        match line.trim().parse::<String>() {
-            Ok(prompt) => {
-                println!("{{ Prompt: {} }}", prompt.to_string().blue().bold());
-                break prompt;
-            }
-            Err(_) => {
-                eprintln!("{}", "Invalid prompt — please try again.".red());
             }
         }
     };
@@ -69,6 +55,24 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
     };
+    let prompt = loop {
+        let mut line = String::new();
+        println!("{} Enter the prompt: ", "?".blue());
+        std::io::stdin()
+            .read_line(&mut line)
+            .expect("Failed to read line");
+        match line.trim().parse::<String>() {
+            Ok(prompt) => { break prompt; }
+            Err(_) => {
+                eprintln!("{}", "Invalid prompt — please try again.".red());
+            }
+        }
+    };
+    Ok((model, prompt, language.to_string()))
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let (model, prompt, language) = get_args()?;
     let output = Command::new("ollama")
         .args(&["run", &model, &prompt])
         .output()?;
