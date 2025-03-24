@@ -41,6 +41,34 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
     };
+    let language = loop {
+        let mut line = String::new();
+        println!(
+            "{} Python\n{} Ruby\n{} Rust\n{} Webapp with Svelte\n{} Enter the language/option: ",
+            "[1]".bold(),
+            "[2]".bold(),
+            "[3]".bold(),
+            "[4]".bold(),
+            "?".blue()
+        );
+        std::io::stdin()
+            .read_line(&mut line)
+            .expect("Failed to read line");
+        match line.trim().parse::<i32>() {
+            Ok(lang) => {
+                match lang {
+                    1 => { println!("{{ Language: {} }}", "Python".blue().bold()); break "python"; }
+                    2 => { println!("{{ Language: {} }}", "Ruby".blue().bold()); break "ruby"; }
+                    3 => { println!("{{ Language: {} }}", "Rust".blue().bold()); break "rust"; }
+                    4 => { println!("{{ Language: {} }}", "Webapp with Svelte".blue().bold()); break "webapp"; }
+                    _ => { eprintln!("{}", "Invalid language — please try again.".red()); }
+                }
+            }
+            Err(_) => {
+                eprintln!("{}", "Invalid language — please try again.".red());
+            }
+        }
+    };
     let output = Command::new("ollama")
         .args(&["run", &model, &prompt])
         .output()?;
