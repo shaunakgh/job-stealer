@@ -3,11 +3,28 @@ use std::error::Error;
 use colored::*;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let model = "deepseek-r1";
-    let prompt = "Tell me a joke.";
+    let model = loop {
+        let mut line = String::new();
+        println!("{} Enter the model to be used: ", "?".blue());
+        std::io::stdin().read_line(&mut line).expect("Failed to read line");
+        match line.trim().parse::<String>() {
+            Ok(model) => {
+                let status = Command::new("ollama")
+                    .args(&["run", &model])
+                    .output()?;
 
+                if status.status.success() {
+                    println!("{{ Model: {} }}", model.to_string().blue().bold());
+                    break model;
+                } else {
+                    eprintln!("{}", "Invalid model — please try again.".red());
+                }
+            }
+            Err(_) => { eprintln!("{}", "Invalid model — please try again.".red()); }
+        }
+    };
     let output = Command::new("ollama")
-        .args(&["run", model, prompt])
+        .args(&["run", &model, "tell me a new joke"])
         .output()?;
 
     if output.status.success() {
