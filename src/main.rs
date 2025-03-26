@@ -18,23 +18,18 @@ fn get_args() -> Result<ModelPromptLang, Box<dyn Error>> {
                 if status.status.success() {
                     println!("{{ Model: {} }}", model.to_string().blue().bold());
                     break model;
-                } else {
-                    eprintln!("{}", "Invalid model — please try again.".red());
-                }
+                } else { eprintln!("{}", "Invalid model — please try again.".red()); }
             }
-            Err(_) => {
-                eprintln!("{}", "Invalid model — please try again.".red());
-            }
+            Err(_) => { eprintln!("{}", "Invalid model — please try again.".red()); }
         }
     };
     let language = loop {
         let mut line = String::new();
         println!(
-            "{} Python\n{} Ruby\n{} Rust\n{} Webapp with Svelte\n{} Enter the language/option: ",
+            "{} Python\n{} Ruby\n{} Rust\n{} Enter the language/option: ",
             "[1]".bold(),
             "[2]".bold(),
             "[3]".bold(),
-            "[4]".bold(),
             "?".blue()
         );
         std::io::stdin()
@@ -46,7 +41,6 @@ fn get_args() -> Result<ModelPromptLang, Box<dyn Error>> {
                     1 => { println!("{{ Language: {} }}", "Python".blue().bold()); break "python"; }
                     2 => { println!("{{ Language: {} }}", "Ruby".blue().bold()); break "ruby"; }
                     3 => { println!("{{ Language: {} }}", "Rust".blue().bold()); break "rust"; }
-                    4 => { println!("{{ Language: {} }}", "Webapp with Svelte".blue().bold()); break "webapp"; }
                     _ => { eprintln!("{}", "Invalid language — please try again.".red()); }
                 }
             }
@@ -74,7 +68,7 @@ fn get_args() -> Result<ModelPromptLang, Box<dyn Error>> {
 fn main() -> Result<(), Box<dyn Error>> {
     let (model, prompt, language) = get_args()?;
     let output = Command::new("ollama")
-        .args(&["run", &model, &prompt])
+        .args(&["run", &model, &format!("Code this with a concise and multidisciplinary intent and form: {} in {}",prompt, language)])
         .output()?;
 
     if output.status.success() {
