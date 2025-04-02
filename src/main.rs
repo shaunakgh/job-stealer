@@ -10,12 +10,14 @@ fn get_args() -> Result<ModelPromptLang, Box<dyn Error>> {
     // model name (e.g deepseek-r1)
     let model = loop {
         let mut line = String::new();
-        println!("{} Enter the model to be used: ", "?".blue());
+        println!("{} Enter the model to be used. click enter for default (mistral): ", "?".blue());
         std::io::stdin()
             .read_line(&mut line)
             .expect("Failed to read line");
         match line.trim().parse::<String>() {
             Ok(model) => {
+                if model == "" { break "mistral".to_string(); }
+
                 let status = Command::new("ollama").args(&["run", &model]).output()?;
 
                 if status.status.success() {
@@ -78,15 +80,25 @@ fn main() -> Result<(), Box<dyn Error>> {
         .output()?;
 
     // Parse to get code
-    let re = Regex::new(r"(?s)```python\s+(.*?)\s+```").unwrap();
+    let re = Regex::new(&format!(r"(?s)```{}\s+(.*?)\s+```", language)).unwrap();
+    #[allow(unused_assignments)]
+    let mut code = "";
 
     if output.status.success() {
-        println!(
-            "{} {}\n{}",
-            "+".green(),
-            "Output: ".bright_yellow().bold(),
-            String::from_utf8_lossy(&output.stdout).blue().italic()
-        );
+        let text = String::from_utf8_lossy(&output.stdout);
+
+        if let Some(captures) = re.captures(&text) {
+            code = captures.get(1).unwrap().as_str();
+            println!(
+                "{} {}\n{}",
+                "+".green(),
+                "Output: ".bright_yellow().bold(),
+                code
+            );
+        } else {
+            println!("{}", "No code block found. Maybe retry with diff model".red().italic());
+            std::process::exit(0)
+        }
     } else {
         eprintln!(
             "Error: {}",
