@@ -5,7 +5,9 @@ use std::process::Command;
 
 type ModelPromptLang = (String, String, String);
 
+// Get arguments for ai prompt
 fn get_args() -> Result<ModelPromptLang, Box<dyn Error>> {
+    // model name (e.g deepseek-r1)
     let model = loop {
         let mut line = String::new();
         println!("{} Enter the model to be used: ", "?".blue());
@@ -24,6 +26,7 @@ fn get_args() -> Result<ModelPromptLang, Box<dyn Error>> {
             Err(_) => { eprintln!("{}", "Invalid model — please try again.".red()); }
         }
     };
+    // Language of choice to be coded in
     let language = loop {
         let mut line = String::new();
         println!(
@@ -50,6 +53,7 @@ fn get_args() -> Result<ModelPromptLang, Box<dyn Error>> {
             }
         }
     };
+    // Project prompt (e.g Create a django webapp)
     let prompt = loop {
         let mut line = String::new();
         println!("{} Enter the prompt: ", "?".blue());
@@ -67,10 +71,14 @@ fn get_args() -> Result<ModelPromptLang, Box<dyn Error>> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+    // Init AI
     let (model, prompt, language) = get_args()?;
     let output = Command::new("ollama")
         .args(&["run", &model, &format!("Code this with a concise and multidisciplinary intent and form without adding anything extra - just the code: {} in {}", prompt, language)])
         .output()?;
+
+    // Parse to get code
+    let re = Regex::new(r"(?s)```python\s+(.*?)\s+```").unwrap();
 
     if output.status.success() {
         println!(
