@@ -1,4 +1,5 @@
 use colored::*;
+use regex::Regex;
 use std::error::Error;
 use std::process::Command;
 
@@ -68,7 +69,7 @@ fn get_args() -> Result<ModelPromptLang, Box<dyn Error>> {
 fn main() -> Result<(), Box<dyn Error>> {
     let (model, prompt, language) = get_args()?;
     let output = Command::new("ollama")
-        .args(&["run", &model, &format!("Code this with a concise and multidisciplinary intent and form: {} in {}",prompt, language)])
+        .args(&["run", &model, &format!("Code this with a concise and multidisciplinary intent and form without adding anything extra - just the code: {} in {}", prompt, language)])
         .output()?;
 
     if output.status.success() {
