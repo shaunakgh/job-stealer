@@ -3,20 +3,20 @@ use regex::Regex;
 use std::error::Error;
 use std::process::Command;
 
-type ModelPromptLang = (String, String, String);
+type ModelPrompt = (String, String, String, String);
 
 // Get arguments for ai prompt
-fn get_args() -> Result<ModelPromptLang, Box<dyn Error>> {
+fn get_args() -> Result<ModelPrompt, Box<dyn Error>> {
     // model name (e.g deepseek-r1)
     let model = loop {
         let mut line = String::new();
-        println!("{} Enter the model to be used. click enter for default (mistral): ", "?".blue());
+        println!("{} Enter the model to be used. Click enter for default (mistral): ", "?".blue());
         std::io::stdin()
             .read_line(&mut line)
             .expect("Failed to read line");
         match line.trim().parse::<String>() {
             Ok(model) => {
-                if model == "" { break "mistral".to_string(); }
+                if model == "" { println!("{}", "Defaulting to Mistral!".blue().italic()); break "mistral".to_string(); }
 
                 let status = Command::new("ollama").args(&["run", &model]).output()?;
 
@@ -69,12 +69,36 @@ fn get_args() -> Result<ModelPromptLang, Box<dyn Error>> {
             }
         }
     };
-    Ok((model, prompt, language.to_string()))
+    // Path to project
+    let path = loop {
+        let mut line = String::new();
+        println!("{} Enter the path to the project. Click enter for default (current working directory): ", "?".blue());
+        std::io::stdin()
+            .read_line(&mut line)
+            .expect("Failed to read line");
+        match line.trim().parse::<String>() {
+            Ok(path) => {
+                if path == "" { println!("{}", "Defaulting to current working directory!".blue().italic()); break ".".to_string(); }
+
+                let status = Command::new(&format!("cd {}", path)).output()?;
+                if status.status.success() {
+                    println!("{{ Path: {} }}", path.to_string().blue().bold());
+                    break path;
+                } else { eprintln!("{}", "Invalid model — please try again.".red()); }
+
+                break path;
+            }
+            Err(_) => {
+                eprintln!("{}", "Invalid path — please try again.".red());
+            }
+        }
+    };
+    Ok((model, prompt, language.to_string(), path.to_string()))
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Init AI
-    let (model, prompt, language) = get_args()?;
+    let (model, prompt, language, path) = get_args()?;
     let output = Command::new("ollama")
         .args(&["run", &model, &format!("Code this with a concise and multidisciplinary intent and form without adding anything extra - just the code: {} in {}", prompt, language)])
         .output()?;
