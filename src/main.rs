@@ -1,3 +1,5 @@
+mod env;
+
 use colored::*;
 use regex::Regex;
 use std::error::Error;
